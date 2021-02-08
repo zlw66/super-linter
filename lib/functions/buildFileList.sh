@@ -113,28 +113,8 @@ function BuildFileList() {
     # print header #
     ################
     debug "----------------------------------------------"
-    debug "Populating the file list with all the files in the ${WORKSPACE_PATH} workspace"
-    mapfile -t RAW_FILE_ARRAY < <(find "${WORKSPACE_PATH}" \
-      -not \( -path '*/\.git' -prune \) \
-      -not \( -path '*/\.pytest_cache' -prune \) \
-      -not \( -path '*/\.rbenv' -prune \) \
-      -not \( -path '*/\.terragrunt-cache' -prune \) \
-      -not \( -path '*/\.venv' -prune \) \
-      -not \( -path '*/\__pycache__' -prune \) \
-      -not \( -path '*/\node_modules' -prune \) \
-      -not -name ".DS_Store" \
-      -not -name "*.gif" \
-      -not -name "*.ico" \
-      -not -name "*.jpg" \
-      -not -name "*.jpeg" \
-      -not -name "*.pdf" \
-      -not -name "*.png" \
-      -not -name "*.webp" \
-      -not -name "*.woff" \
-      -not -name "*.woff2" \
-      -not -name "*.zip" \
-      -type f \
-      2>&1 | sort)
+    debug "Populating the file list with:[git ls-tree -r --name-only \"${GITHUB_SHA}\"]"
+    mapfile -t RAW_FILE_ARRAY < <(git -C "${GITHUB_WORKSPACE}" ls-tree -r --name-only "${GITHUB_SHA}" 2>&1)
 
     debug "RAW_FILE_ARRAY contents: ${RAW_FILE_ARRAY[*]}"
   fi
