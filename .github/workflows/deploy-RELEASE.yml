@@ -70,6 +70,36 @@ jobs:
           password: ${{ secrets.GCR_TOKEN }}
           registry: ghcr.io
 
+      #######################################################
+      # Create a GitHub Issue with the info from this build #
+      #######################################################
+      - name: Create GitHub Issue
+        uses: actions/github-script@v3.1.0
+        id: create-issue
+        with:
+          # https://octokit.github.io/rest.js/v18#issues-create
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const create = await github.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "Deploying Release to production",
+              body: 'Currently deploying a release...'
+            })
+            console.log('create', create)
+            return create.data.number
+
+      #########################
+      # Update deployment API #
+      #########################
+      - name: Start deployment
+        uses: bobheadxi/deployments@v0.4.3
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: Release
+
       ###########################################
       # Build and Push containers to registries #
       ###########################################
@@ -90,3 +120,59 @@ jobs:
             ghcr.io/github/super-linter:latest
             ghcr.io/github/super-linter:v3
             ghcr.io/github/super-linter:${{ github.event.release.tag_name }}
+
+      #########################
+      # Update Deployment API #
+      #########################
+      - name: Update deployment status
+        uses: bobheadxi/deployments@v0.4.3
+        if: always()
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          env_url: https://github.com/orgs/${{github.repository_owner}}/packages?repo_name=${{github.repository.name}}
+
+      ###########################
+      # Update the GitHub Issue #
+      ###########################
+      - name: Update issue success
+        uses: actions/github-script@v3.1.0
+        if: success()
+        with:
+          # https://octokit.github.io/rest.js/v18#issues-create
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: "${{ steps.create-issue.outputs.result }}",
+              title: "Release deployment",
+              body: "Successfully deployed Release"
+            })
+
+      #######################################
+      # Update actions.yml with new version #
+      #######################################
+      - name: Update actions.yml with release version
+        if: success()
+        run: ./.automation/update-actions-version.sh
+
+      ###########################
+      # Update the GitHub Issue #
+      ###########################
+      - name: Update issue failure
+        uses: actions/github-script@v3.1.0
+        if: failure()
+        with:
+          # https://octokit.github.io/rest.js/v18#issues-create
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: "${{ steps.create-issue.outputs.result }}",
+              title: "Release deployment",
+              body: "Failed to deploy release!"
+            })
