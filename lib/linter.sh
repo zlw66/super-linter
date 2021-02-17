@@ -730,8 +730,8 @@ GetGitHubVars
 ########################################################
 # Initialize variables that depend on GitHub variables #
 ########################################################
-DEFAULT_ANSIBLE_DIRECTORY="${GITHUB_WORKSPACE}/ansible"     # Default Ansible Directory
-export DEFAULT_ANSIBLE_DIRECTORY                            # Workaround SC2034
+DEFAULT_ANSIBLE_DIRECTORY="${GITHUB_WORKSPACE}/ansible"                               # Default Ansible Directory
+export DEFAULT_ANSIBLE_DIRECTORY                                                      # Workaround SC2034
 DEFAULT_TEST_CASE_ANSIBLE_DIRECTORY="${GITHUB_WORKSPACE}/${TEST_CASE_FOLDER}/ansible" # Default Ansible directory when running test cases
 export DEFAULT_TEST_CASE_ANSIBLE_DIRECTORY
 
