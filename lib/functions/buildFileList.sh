@@ -115,8 +115,8 @@ function BuildFileList() {
     # print header #
     ################
     debug "----------------------------------------------"
-    debug "Populating the file list with:[git -C \"${WORKSPACE_PATH}\" ls-tree -r --name-only HEAD]"
-    mapfile -t RAW_FILE_ARRAY < <(git -C "${WORKSPACE_PATH}" ls-tree -r --name-only HEAD 2>&1)
+    debug "Populating the file list with:[git -C \"${WORKSPACE_PATH}\" ls-tree -r --name-only HEAD | xargs printf \"${WORKSPACE_PATH}%s\n\"]"
+    mapfile -t RAW_FILE_ARRAY < <(git -C "${WORKSPACE_PATH}" ls-tree -r --name-only HEAD | xargs printf "${WORKSPACE_PATH}%s\n" 2>&1)
     debug "RAW_FILE_ARRAY contents: ${RAW_FILE_ARRAY[*]}"
   fi
 
